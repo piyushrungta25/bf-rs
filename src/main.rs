@@ -1,24 +1,38 @@
 use std::env::args;
 use std::fs::File;
-use std::io::{stdin, stdout, Read, Write};
+use std::io::{stdin, stdout, Read, Write, Stdout, Stdin};
 
-struct BF {
+struct BF<T, U> {
     mem: Vec<u8>,
     ptr: usize,
     file_contents: Vec<u8>,
     file_ptr: usize,
+    out_sink: T,
+    input_src: U
 }
 
-impl BF {
-    fn new(file_path: &str) -> Self {
-        let mut file = File::open(file_path).unwrap();
-        let mut buf = Vec::new();
-        let _ = file.read_to_end(&mut buf);
+impl BF<Stdout, Stdin> {
+    fn new(file_contents: Vec<u8>) -> Self {
         BF {
             mem: vec![0],
             ptr: 0,
-            file_contents: buf,
+            file_contents,
             file_ptr: 0,
+            out_sink: stdout(),
+            input_src: stdin()
+        }
+    }
+}
+
+impl<T: Write, U: Read> BF<T, U> {
+    fn with_sinks(file_contents: Vec<u8>, out_sink: T, input_src: U) -> Self {
+        BF {
+            mem: vec![0],
+            ptr: 0,
+            file_contents,
+            file_ptr: 0,
+            out_sink,
+            input_src
         }
     }
 
@@ -49,12 +63,13 @@ impl BF {
     }
 
     fn read_byte(&mut self) {
-        let byte = stdin().bytes().next().unwrap().unwrap();
-        self.mem[self.ptr] = byte;
+        let mut buf = [0];
+        self.input_src.read_exact(&mut buf).ok();
+        self.mem[self.ptr] = buf[0];
     }
 
     fn write_byte(&mut self) {
-        stdout().write(&[self.mem[self.ptr]]).ok();
+        self.out_sink.write(&[self.mem[self.ptr]]).ok();
         let _ = stdout().flush().is_ok();
     }
 
@@ -130,6 +145,9 @@ impl BF {
 
 fn main() {
     let file_path = args().nth(1).unwrap();
-    let mut bf = BF::new(&*file_path);
+    let mut file = File::open(file_path).unwrap();
+    let mut buf = Vec::new();
+    let _ = file.read_to_end(&mut buf);
+    let mut bf = BF::new(buf);
     bf.interpret();
 }
