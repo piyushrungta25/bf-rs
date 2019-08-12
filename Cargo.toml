@@ -1,5 +1,5 @@
 [package]
-name = "bf-rs"
+name = "bfrs"
 version = "0.1.0"
 authors = ["Piyush Rungta <piyushrungta25@gmail.com>"]
 edition = "2018"
