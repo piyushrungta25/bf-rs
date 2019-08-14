@@ -1,7 +1,7 @@
-use std::process::Command;  // Run programs
 use assert_cmd::prelude::*; // Add methods on commands
 use std::fs::File;
 use std::io::Read;
+use std::process::Command; // Run programs
 
 fn test_helper(file_name: &str) -> Result<(), Box<std::error::Error>> {
     let mut target_str = String::new();
@@ -9,10 +9,8 @@ fn test_helper(file_name: &str) -> Result<(), Box<std::error::Error>> {
 
     let mut cmd = Command::cargo_bin(env!("CARGO_PKG_NAME"))?;
     cmd.arg(file_name);
-    cmd.assert()
-        .success()
-        .stdout(target_str);
-	Ok(())
+    cmd.assert().success().stdout(target_str);
+    Ok(())
 }
 
 #[test]
