@@ -25,18 +25,38 @@ fn bench_square_number(c: &mut Criterion) {
     bench_helper(c, "samples/square_number.bf");
 }
 
-fn big_bench_mandelbrot(c: &mut Criterion) {
-    bench_helper(c, "samples/mandelbrot.bf");
-}
-
 fn bench_bottles(c: &mut Criterion) {
     bench_helper(c, "samples/bottles.bf");
 }
 
+fn bench_quine(c: &mut Criterion) {
+    bench_helper(c, "samples/quine.bf");
+}
+
+// fn big_bench_mandelbrot(c: &mut Criterion) {
+//     bench_helper(c, "samples/mandelbrot.bf");
+// }
+
+fn big_bench_1(c: &mut Criterion) {
+    bench_helper(c, "samples/bench_1.bf");
+}
+
+fn big_bench_2(c: &mut Criterion) {
+    bench_helper(c, "samples/bench_2.bf");
+}
+
 criterion_group!(
-    benches,
-    bench_square_number,
-    // big_bench_mandelbrot,
-    bench_bottles
+	name = small_benches;
+	config = Criterion::default();
+    targets = bench_square_number, bench_bottles, bench_quine
 );
-criterion_main!(benches);
+
+
+criterion_group!(
+	name = big_benches;
+	config = Criterion::default().sample_size(10);
+    targets = big_bench_1, big_bench_2
+);
+
+
+criterion_main!(big_benches, small_benches);
