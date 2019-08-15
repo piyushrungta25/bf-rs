@@ -144,6 +144,11 @@ impl<T: Write, U: Read> BF<T, U> {
         }
     }
 
+    fn reset_state(&mut self) {
+        self.mem = vec![0];
+        self.ptr = 0;
+    }
+
     pub fn start_interactive_loop(&mut self) {
         let mut buf = String::new();
         loop {
@@ -158,6 +163,7 @@ impl<T: Write, U: Read> BF<T, U> {
                     println!("-----------");
                     HexDump::new(&self.mem).dump().unwrap();
                 }
+                "reset" => self.reset_state(),
                 _ => self.interpret(buf.clone().into_bytes()),
             }
         }
