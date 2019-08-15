@@ -68,7 +68,7 @@ impl<T: Write, U: Read> BF<T, U> {
 
     fn write_byte(&mut self) {
         self.out_sink.write(&[self.mem[self.ptr]]).ok();
-        let _ = stdout().flush().is_ok();
+        let _ = self.out_sink.flush().is_ok();
     }
 
     fn open_loop(&mut self) {
