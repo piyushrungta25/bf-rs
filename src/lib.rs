@@ -1,4 +1,6 @@
 use std::io::{stdin, stdout, Read, Stdin, Stdout, Write};
+mod utils;
+use utils::HexDump;
 
 pub struct BF<T, U> {
     mem: Vec<u8>,
@@ -10,11 +12,11 @@ pub struct BF<T, U> {
 }
 
 impl BF<Stdout, Stdin> {
-    pub fn new(file_contents: Vec<u8>) -> Self {
+    pub fn new() -> Self {
         BF {
             mem: vec![0],
             ptr: 0,
-            file_contents,
+            file_contents: Vec::new(),
             file_ptr: 0,
             out_sink: stdout(),
             input_src: stdin(),
@@ -23,11 +25,11 @@ impl BF<Stdout, Stdin> {
 }
 
 impl<T: Write, U: Read> BF<T, U> {
-    pub fn with_sinks(file_contents: Vec<u8>, out_sink: T, input_src: U) -> Self {
+    pub fn with_sinks(out_sink: T, input_src: U) -> Self {
         BF {
             mem: vec![0],
             ptr: 0,
-            file_contents,
+            file_contents: Vec::new(),
             file_ptr: 0,
             out_sink,
             input_src,
@@ -116,7 +118,9 @@ impl<T: Write, U: Read> BF<T, U> {
         }
     }
 
-    pub fn interpret(&mut self) {
+    pub fn interpret(&mut self, file_contents: Vec<u8>) {
+        self.file_contents = file_contents;
+        self.file_ptr = 0;
         loop {
             if self.file_ptr >= self.file_contents.len() {
                 break;
@@ -137,6 +141,25 @@ impl<T: Write, U: Read> BF<T, U> {
             }
 
             self.file_ptr += 1;
+        }
+    }
+
+    pub fn start_interactive_loop(&mut self) {
+        let mut buf = String::new();
+        loop {
+            buf.clear();
+            print!(">>> ");
+            stdout().flush().unwrap();
+            stdin().read_line(&mut buf).unwrap();
+            match buf.trim() {
+                "dump" => {
+                    println!("-----------");
+                    println!("Memory Dump");
+                    println!("-----------");
+                    HexDump::new(&self.mem).dump().unwrap();
+                }
+                _ => self.interpret(buf.clone().into_bytes()),
+            }
         }
     }
 }
