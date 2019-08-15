@@ -11,10 +11,7 @@ fn test_helper(file_name: &str, has_input: bool) -> Result<(), Box<std::error::E
     cmd.arg(file_name);
 
     let assert = if has_input {
-        cmd
-            .with_stdin()
-            .path(format!("{}.in", file_name))?
-            .assert()
+        cmd.with_stdin().path(format!("{}.in", file_name))?.assert()
     } else {
         cmd.assert()
     };
@@ -64,4 +61,3 @@ fn test_cat() -> Result<(), Box<std::error::Error>> {
 fn test_factor() -> Result<(), Box<std::error::Error>> {
     test_helper("samples/factor.bf", true)
 }
-

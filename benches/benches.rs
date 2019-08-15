@@ -3,7 +3,7 @@ extern crate criterion;
 
 use bfrs::BF;
 use std::fs::File;
-use std::io::{sink, empty, Sink, Empty, Read};
+use std::io::{empty, sink, Empty, Read, Sink};
 
 use criterion::Criterion;
 
@@ -51,12 +51,10 @@ criterion_group!(
     targets = bench_square_number, bench_bottles, bench_quine
 );
 
-
 criterion_group!(
 	name = big_benches;
 	config = Criterion::default().sample_size(10);
     targets = big_bench_1, big_bench_2
 );
-
 
 criterion_main!(big_benches, small_benches);
