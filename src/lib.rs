@@ -4,7 +4,7 @@ mod utils;
 use utils::HexDump;
 
 pub mod parser;
-use parser::{Token, parse};
+use parser::{parse, Token};
 
 pub struct BF<T, U> {
     mem: Vec<u8>,
@@ -52,11 +52,10 @@ impl<T: Write, U: Read> BF<T, U> {
         } else {
             let extra_memory_cells = n - (self.mem.len() - 1 - self.ptr) as i32;
             if extra_memory_cells > 0 {
-                let mut v = vec!(0; extra_memory_cells as usize);
+                let mut v = vec![0; extra_memory_cells as usize];
                 self.mem.append(&mut v);
             }
             self.ptr += n as usize;
-
         }
     }
 

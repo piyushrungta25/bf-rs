@@ -5,7 +5,7 @@ use bfrs::BF;
 use std::fs::File;
 use std::io::{empty, sink, Read};
 
-use criterion::{Criterion, BatchSize};
+use criterion::{BatchSize, Criterion};
 
 fn bench_helper(c: &mut Criterion, source_file: &'static str) {
     let mut file = File::open(source_file).unwrap();
@@ -17,7 +17,7 @@ fn bench_helper(c: &mut Criterion, source_file: &'static str) {
         b.iter_batched(
             || buf.clone(),
             |buf| bf.interpret(buf),
-            BatchSize::SmallInput
+            BatchSize::SmallInput,
         );
     });
 }
