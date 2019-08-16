@@ -1,12 +1,16 @@
 use std::io::{stdin, stdout, Read, Stdin, Stdout, Write};
+
 mod utils;
 use utils::HexDump;
+
+mod parser;
+use parser::{Token, parse};
 
 pub struct BF<T, U> {
     mem: Vec<u8>,
     ptr: usize,
-    file_contents: Vec<u8>,
-    file_ptr: usize,
+    tokens: Vec<Token>,
+    token_ptr: usize,
     out_sink: T,
     input_src: U,
 }
@@ -16,8 +20,8 @@ impl BF<Stdout, Stdin> {
         BF {
             mem: vec![0],
             ptr: 0,
-            file_contents: Vec::new(),
-            file_ptr: 0,
+            tokens: Vec::new(),
+            token_ptr: 0,
             out_sink: stdout(),
             input_src: stdin(),
         }
@@ -29,36 +33,30 @@ impl<T: Write, U: Read> BF<T, U> {
         BF {
             mem: vec![0],
             ptr: 0,
-            file_contents: Vec::new(),
-            file_ptr: 0,
+            tokens: Vec::new(),
+            token_ptr: 0,
             out_sink,
             input_src,
         }
     }
 
-    fn inc_mem(&mut self) {
+    fn inc_mem(&mut self, n: u8) {
         let num: u8 = *self.mem.get(self.ptr).unwrap();
-        let (num, _) = num.overflowing_add(1);
+        let (num, _) = num.overflowing_add(n);
         self.mem[self.ptr] = num;
     }
 
-    fn dec_mem(&mut self) {
-        let num: u8 = *self.mem.get(self.ptr).unwrap();
-        let (num, _) = num.overflowing_sub(1);
-        self.mem[self.ptr] = num;
-    }
+    fn inc_ptr(&mut self, n: i32) {
+        if n < 0 {
+            self.ptr = self.ptr.saturating_sub(n.abs() as usize);
+        } else {
+            let extra_memory_cells = n - (self.mem.len() - 1 - self.ptr) as i32;
+            if extra_memory_cells > 0 {
+                let mut v = vec!(0; extra_memory_cells as usize);
+                self.mem.append(&mut v);
+            }
+            self.ptr += n as usize;
 
-    fn inc_ptr(&mut self) {
-        if self.mem.len() == self.ptr + 1 {
-            self.mem.push(0);
-        }
-
-        self.ptr += 1;
-    }
-
-    fn dec_ptr(&mut self) {
-        if self.ptr > 0 {
-            self.ptr -= 1;
         }
     }
 
@@ -73,74 +71,38 @@ impl<T: Write, U: Read> BF<T, U> {
         let _ = self.out_sink.flush().is_ok();
     }
 
-    fn open_loop(&mut self) {
+    fn open_loop(&mut self, loop_end: usize) {
         if self.mem[self.ptr] == 0 {
-            let mut open_count = 0;
-            loop {
-                self.file_ptr += 1;
-                if self.file_ptr >= self.file_contents.len() {
-                    break;
-                }
-
-                if self.file_contents[self.file_ptr] == '[' as u8 {
-                    open_count += 1;
-                } else if self.file_contents[self.file_ptr] == ']' as u8 {
-                    if open_count == 0 {
-                        break;
-                    } else {
-                        open_count -= 1;
-                    }
-                }
-            }
+            self.token_ptr = loop_end;
         }
     }
 
-    fn close_loop(&mut self) {
+    fn close_loop(&mut self, loop_start: usize) {
         if self.mem[self.ptr] != 0 {
-            let mut close_count = 0;
-            loop {
-                if self.file_ptr == 0 || self.file_ptr == 1 {
-                    self.file_ptr = 0;
-                    break;
-                }
-                self.file_ptr -= 1;
-
-                if self.file_contents[self.file_ptr] == ']' as u8 {
-                    close_count += 1;
-                } else if self.file_contents[self.file_ptr] == '[' as u8 {
-                    if close_count == 0 {
-                        break;
-                    } else {
-                        close_count -= 1;
-                    }
-                }
-            }
+            self.token_ptr = loop_start;
         }
     }
 
     pub fn interpret(&mut self, file_contents: Vec<u8>) {
-        self.file_contents = file_contents;
-        self.file_ptr = 0;
+        self.tokens = parse(file_contents);
+        self.token_ptr = 0;
         loop {
-            if self.file_ptr >= self.file_contents.len() {
+            if self.token_ptr >= self.tokens.len() {
                 break;
             }
 
-            let cur_char = self.file_contents[self.file_ptr];
+            let cur_token = self.tokens[self.token_ptr].clone();
 
-            match cur_char as char {
-                '+' => self.inc_mem(),
-                '-' => self.dec_mem(),
-                '>' => self.inc_ptr(),
-                '<' => self.dec_ptr(),
-                '[' => self.open_loop(),
-                ']' => self.close_loop(),
-                '.' => self.write_byte(),
-                ',' => self.read_byte(),
-                _ => {} // comment
+            match cur_token {
+                Token::Inc(n) => self.inc_mem(n),
+                Token::Shift(n) => self.inc_ptr(n),
+                Token::Write => self.write_byte(),
+                Token::Read => self.read_byte(),
+                Token::LoopStart(_, end) => self.open_loop(end),
+                Token::LoopEnd(start, _) => self.close_loop(start),
             }
 
-            self.file_ptr += 1;
+            self.token_ptr += 1;
         }
     }
 
