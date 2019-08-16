@@ -3,21 +3,22 @@ extern crate criterion;
 
 use bfrs::BF;
 use std::fs::File;
-use std::io::{empty, sink, Empty, Read, Sink};
+use std::io::{empty, sink, Read};
 
-use criterion::Criterion;
-
-fn bf_factory(file_name: &str) -> BF<Sink, Empty> {
-    let mut file = File::open(file_name).unwrap();
-    let mut buf = Vec::new();
-    let _ = file.read_to_end(&mut buf);
-    BF::with_sinks(buf, sink(), empty())
-}
+use criterion::{Criterion, BatchSize};
 
 fn bench_helper(c: &mut Criterion, source_file: &'static str) {
+    let mut file = File::open(source_file).unwrap();
+    let mut buf = Vec::new();
+    let _ = file.read_to_end(&mut buf);
+    let mut bf = BF::with_sinks(sink(), empty());
+
     c.bench_function(source_file, move |b| {
-        let mut bf = bf_factory(source_file);
-        b.iter(|| bf.interpret());
+        b.iter_batched(
+            || buf.clone(),
+            |buf| bf.interpret(buf),
+            BatchSize::SmallInput
+        );
     });
 }
 
