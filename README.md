@@ -76,6 +76,18 @@ The interpretor makes some optimizations inspired by the excellent [bfc](https:/
 
 3. The biggest performance gain over the naive implementation was caching the loop start and end index so that input file is scanned only once.
 
+## Tests and benchmarks
+
+Some fairly comprehensive tests are availabel in `tests/`. 
+```bash
+$ cargo test --release
+```
+
+To run benchmarks
+```bash
+$ cargo bench
+```
+
 ## License
 
 Licensed under GPLv3. Sample programs are largely written by other authors and are under other licenses.
