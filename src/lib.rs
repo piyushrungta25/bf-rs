@@ -3,7 +3,7 @@ use std::io::{stdin, stdout, Read, Stdin, Stdout, Write};
 mod utils;
 use utils::HexDump;
 
-mod parser;
+pub mod parser;
 use parser::{Token, parse};
 
 pub struct BF<T, U> {
