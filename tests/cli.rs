@@ -35,8 +35,6 @@ fn test_99_bottles() -> Result<(), Box<std::error::Error>> {
     test_helper("samples/bottles.bf", false)
 }
 
-// run this one with relase build, it takes a long time with debug build
-#[ignore]
 #[test]
 fn test_mandelbrot() -> Result<(), Box<std::error::Error>> {
     test_helper("samples/mandelbrot.bf", false)
