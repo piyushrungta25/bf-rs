@@ -1,5 +1,5 @@
 # bf-rs
-Optimizing Brainf*** interpreter written in Rust
+Optimizing [Brainf***](https://esolangs.org/wiki/Brainfuck) interpreter written in Rust
 
 - Unlimited number of memory cells are available
 - Memory cell increments and decrements wrap around
